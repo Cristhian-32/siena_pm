@@ -100,9 +100,9 @@ return [
 
                 // Roles list
                 'list' => [
-                    'employee' => 'Employee',
-                    'customer' => 'Customer',
-                    'administrator' => 'Administrator'
+                    'employee' => 'Administrator',
+                    'customer' => 'Student',
+                    'administrator' => 'Tutor'
                 ],
 
                 // Roles colors

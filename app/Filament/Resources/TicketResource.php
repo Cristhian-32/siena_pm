@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\TicketResource\Pages;
 use App\Filament\Resources\TicketResource\RelationManagers;
 use App\Models\Project;
+use App\Models\ProjectUser;
 use App\Models\Ticket;
 use App\Models\TicketStatus;
 use App\Models\TicketType;
@@ -17,6 +18,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\HtmlString;
 
 class TicketResource extends Resource
@@ -80,7 +82,11 @@ class TicketResource extends Resource
                                 Forms\Components\Select::make('responsible_id')
                                     ->label(__('Ticket responsible'))
                                     ->searchable()
-                                    ->options(fn() => User::all()->pluck('name', 'id')->toArray()),
+                                    ->options(function () {
+                                        return ProjectUser::with('user')->get()->mapWithKeys(function ($projectUser) {
+                                            return [$projectUser->user_id => $projectUser->user->name ?? 'Nombre no disponible'];
+                                        })->toArray();
+                                    }),
 
                                 Forms\Components\Grid::make()
                                     ->columns(3)
@@ -99,9 +105,15 @@ class TicketResource extends Resource
                                             ->options(fn() => TicketType::all()->pluck('name', 'id')->toArray())
                                             ->default(fn() => TicketType::where('is_default', true)->first()?->id)
                                             ->required(),
-
                                     ]),
-
+                                Forms\Components\DateTimePicker::make('date_init')
+                                    ->label(__('Start Date'))
+                                    ->required()
+                                    ->default(Carbon::today()->setTime(23, 59)),
+                                Forms\Components\DateTimePicker::make('date_end')
+                                    ->label(__('Date End'))
+                                    ->required()
+                                    ->default(Carbon::today()->setTime(23, 59)),
                             ]),
                         Forms\Components\RichEditor::make('content')
                             ->label(__('Ticket content'))
@@ -138,19 +150,42 @@ class TicketResource extends Resource
 
             Tables\Columns\TextColumn::make('status.name')
                 ->label(__('Status'))
-                ->formatStateUsing(fn($record) => new HtmlString('
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="filament-tables-color-column relative flex h-6 w-6 rounded-md"
-                                    style="background-color: ' . $record->status->color . '"></span>
-                                <span>' . $record->status->name . '</span>
-                            </div>
-                        '))
+                ->formatStateUsing(function ($state, $record) {
+                    $isExpired = $record->date_end && Carbon::parse($record->date_end)->lt(now());
+
+                    if ($isExpired) {
+                        // Buscar el status real llamado "Expired" desde DB
+                        $expiredStatus = TicketStatus::where('name', 'Expired')->first();
+
+                        if ($expiredStatus) {
+                            return new HtmlString("
+                    <div class='flex items-center gap-2 mt-1'>
+                        <span class='filament-tables-color-column relative flex h-6 w-6 rounded-md'
+                              style='background-color: {$expiredStatus->color}'></span>
+                        <span>{$expiredStatus->name}</span>
+                    </div>
+                ");
+                        }
+                    }
+
+                    // Si no ha expirado, mostrar el estado real del ticket
+                    return new HtmlString("
+            <div class='flex items-center gap-2 mt-1'>
+                <span class='filament-tables-color-column relative flex h-6 w-6 rounded-md'
+                      style='background-color: {$record->status->color}'></span>
+                <span>{$record->status->name}</span>
+            </div>
+        ");
+                })
                 ->sortable()
                 ->searchable(),
 
             Tables\Columns\TextColumn::make('type.name')
                 ->label(__('Type'))
-
+                ->sortable()
+                ->searchable(),
+            Tables\Columns\TextColumn::make('date_end')
+                ->label(__('Maximum Date'))
                 ->sortable()
                 ->searchable(),
 
@@ -158,7 +193,8 @@ class TicketResource extends Resource
                 ->label(__('Created at'))
                 ->dateTime()
                 ->sortable()
-                ->searchable(),
+                ->searchable()
+                ->toggleable(isToggledHiddenByDefault: true),
         ]);
         return $columns;
     }

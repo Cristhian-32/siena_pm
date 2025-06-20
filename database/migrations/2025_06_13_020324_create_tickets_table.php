@@ -22,6 +22,8 @@ return new class extends Migration
             $table->string('code');
             $table->string('order');
             $table->foreignId('type_id')->constrained('ticket_types');
+            $table->dateTime('date_init');
+            $table->dateTime('date_end');
             $table->softDeletes();
             $table->timestamps();
         });
