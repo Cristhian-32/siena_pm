@@ -28,6 +28,7 @@ class Ticket extends Model implements HasMedia
         'type_id',
         'date_init',
         'date_end',
+        'budget',
     ];
 
     public static function boot()

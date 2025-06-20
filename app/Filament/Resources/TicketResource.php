@@ -105,6 +105,11 @@ class TicketResource extends Resource
                                             ->options(fn() => TicketType::all()->pluck('name', 'id')->toArray())
                                             ->default(fn() => TicketType::where('is_default', true)->first()?->id)
                                             ->required(),
+
+                                        Forms\Components\TextInput::make('budget')
+                                            ->label(__('Budget'))
+                                            ->numeric()
+                                            ->required(),
                                     ]),
                                 Forms\Components\DateTimePicker::make('date_init')
                                     ->label(__('Start Date'))
@@ -179,7 +184,10 @@ class TicketResource extends Resource
                 })
                 ->sortable()
                 ->searchable(),
-
+            Tables\Columns\TextColumn::make('budget')
+                ->label(__('Budget'))
+                ->sortable()
+                ->searchable(),
             Tables\Columns\TextColumn::make('type.name')
                 ->label(__('Type'))
                 ->sortable()

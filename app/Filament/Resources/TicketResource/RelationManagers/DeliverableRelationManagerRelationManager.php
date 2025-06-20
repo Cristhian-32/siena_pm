@@ -34,6 +34,11 @@ class DeliverableRelationManagerRelationManager extends RelationManager
                     ->required()
                     ->maxLength(255),
 
+                Forms\Components\TextInput::make('budget_used')
+                    ->label('Budget Used')
+                    ->required()
+                    ->maxLength(255),
+
                 Forms\Components\Textarea::make('description')
                     ->label('Descripción')
                     ->rows(4)
@@ -49,7 +54,10 @@ class DeliverableRelationManagerRelationManager extends RelationManager
                     ->label('Título')
                     ->searchable()
                     ->sortable(),
-
+                Tables\Columns\TextColumn::make('budget_used')
+                    ->label('Budget Used')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('description')
                     ->label('Descripción')
                     ->searchable()
@@ -95,10 +103,30 @@ class DeliverableRelationManagerRelationManager extends RelationManager
                         $data['status_id'] = DeliverableStatus::where('is_default', true)->value('id');
                         $data['user_id'] = auth()->id();
                         return $data;
+                    })
+                    ->after(function (Model $record) {
+                        $ticket = $record->ticket;
+                        $project = $ticket->project ?? null;
+
+                        if ($project && $project->stat) {
+                            $budgetInit = $project->stat->budget_init;
+                            $usedBudget = $record->budget_used;
+
+                            // Recalcular budget_current: restando el presupuesto usado
+                            // Sumamos todos los budget_used de todos los deliverables del proyecto
+                            $totalUsed = \App\Models\Deliverable::whereHas('ticket', function ($query) use ($project) {
+                                $query->where('project_id', $project->id);
+                            })->sum('budget_used');
+
+                            $budgetCurrent = max(0, $budgetInit - $totalUsed);
+
+                            $project->stat->update([
+                                'budget_current' => $budgetCurrent,
+                            ]);
+                        }
                     }),
-
-
             ])
+
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),

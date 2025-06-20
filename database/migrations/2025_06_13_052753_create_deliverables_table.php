@@ -20,6 +20,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('ticket_id')->constrained('tickets');
             $table->foreignId('status_id')->constrained('deliverable_statuses');
+            $table->integer('budget_used');
             $table->softDeletes();
             $table->timestamps();
         });

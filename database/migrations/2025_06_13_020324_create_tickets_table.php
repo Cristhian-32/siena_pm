@@ -24,6 +24,7 @@ return new class extends Migration
             $table->foreignId('type_id')->constrained('ticket_types');
             $table->dateTime('date_init');
             $table->dateTime('date_end');
+            $table->integer('budget');
             $table->softDeletes();
             $table->timestamps();
         });

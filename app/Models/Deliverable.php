@@ -19,7 +19,8 @@ class Deliverable extends Model implements HasMedia
         'description',
         'user_id',
         'ticket_id',
-        'status_id'
+        'status_id',
+        'budget_used',
     ];
 
     protected $appends = [

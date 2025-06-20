@@ -114,7 +114,7 @@ class RequestResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+
                 Action::make('aceptarSolicitud')
                     ->label('Accept')
                     ->icon('heroicon-o-check-circle')
