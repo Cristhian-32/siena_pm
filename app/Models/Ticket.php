@@ -72,4 +72,9 @@ class Ticket extends Model implements HasMedia
     {
         return $this->hasMany(Deliverable::class, 'ticket_id', 'id');
     }
+
+    public function requests(): HasMany
+    {
+        return $this->hasMany(Request::class, 'ticket_id', 'id');
+    }
 }

@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->call(TicketStatusSeeder::class);
         $this->call(TicketTypeSeeder::class);
         $this->call(DeliverableStatusSeeder::class);
+        $this->call(RequestStatusSeeder::class);
         Storage::disk('public')->deleteDirectory('media'); // Borra todas las imágenes de Spatie
 
     }

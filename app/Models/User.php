@@ -76,4 +76,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Ticket::class, 'responsible_id', 'id');
     }
+
+    public function RequestsOwned(): HasMany
+    {
+        return $this->hasMany(Ticket::class, 'responsible_id', 'id');
+    }
 }
